@@ -14,6 +14,14 @@ const postSchema = mongoose.Schema(
 		img: {
 			type: String,
 		},
+		codeSnippet: {
+			type: String,
+			default: "",
+		},
+		codeLanguage: {
+			type: String,
+			default: "",
+		},
 		likes: {
 			// array of user ids
 			type: [mongoose.Schema.Types.ObjectId],

@@ -12,9 +12,12 @@ import {
 	Text,
 	useColorModeValue,
 	Link,
+	Divider,
+	AbsoluteCenter,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
+import { FaGoogle, FaGithub } from "react-icons/fa";
 import { useSetRecoilState } from "recoil";
 import authScreenAtom from "../atoms/authAtom";
 import useShowToast from "../hooks/useShowToast";
@@ -101,23 +104,52 @@ export default function LoginCard() {
 						</FormControl>
 						<Stack spacing={10} pt={2}>
 							<Button
-								loadingText='Logging in'
-								size='lg'
-								bg={useColorModeValue("gray.600", "gray.700")}
-								color={"white"}
-								_hover={{
-									bg: useColorModeValue("gray.700", "gray.800"),
-								}}
+								loadingText="Logging in"
+								size="lg"
+								bg="#10B981"
+								color="white"
+								_hover={{ bg: "#059669" }}
 								onClick={handleLogin}
 								isLoading={loading}
 							>
 								Login
 							</Button>
 						</Stack>
-						<Stack pt={6}>
-							<Text align={"center"}>
+
+						<Box position="relative" py={4}>
+							<Divider borderColor={useColorModeValue("gray.300", "#30363d")} />
+							<AbsoluteCenter bg={useColorModeValue("white", "gray.dark")} px={4}>
+								<Text fontSize="sm" color="gray.light">or continue with</Text>
+							</AbsoluteCenter>
+						</Box>
+
+						<Stack direction="row" spacing={4}>
+							<Button
+								w="full"
+								variant="outline"
+								borderColor={useColorModeValue("gray.300", "#30363d")}
+								_hover={{ bg: useColorModeValue("gray.50", "#161b22"), borderColor: "#10B981" }}
+								leftIcon={<FaGoogle />}
+								onClick={() => { window.location.href = "/api/users/auth/google"; }}
+							>
+								Google
+							</Button>
+							<Button
+								w="full"
+								variant="outline"
+								borderColor={useColorModeValue("gray.300", "#30363d")}
+								_hover={{ bg: useColorModeValue("gray.50", "#161b22"), borderColor: "#10B981" }}
+								leftIcon={<FaGithub />}
+								onClick={() => { window.location.href = "/api/users/auth/github"; }}
+							>
+								GitHub
+							</Button>
+						</Stack>
+
+						<Stack pt={4}>
+							<Text align="center">
 								Don&apos;t have an account?{" "}
-								<Link color={"blue.400"} onClick={() => setAuthScreen("signup")}>
+								<Link color="#10B981" onClick={() => setAuthScreen("signup")}>
 									Sign up
 								</Link>
 							</Text>

@@ -1,5 +1,6 @@
 import { Avatar, Box, Button, Divider, Flex, Image, Spinner, Text } from "@chakra-ui/react";
 import Actions from "../components/Actions";
+import CodeBlock from "../components/CodeBlock";
 import { useEffect } from "react";
 import Comment from "../components/Comment";
 import useGetUserProfile from "../hooks/useGetUserProfile";
@@ -67,7 +68,6 @@ const PostPage = () => {
 	}
 
 	if (!currentPost) return null;
-	console.log("currentPost", currentPost);
 
 	return (
 		<>
@@ -94,9 +94,13 @@ const PostPage = () => {
 
 			<Text my={3}>{currentPost.text}</Text>
 
+			{currentPost.codeSnippet && (
+				<CodeBlock code={currentPost.codeSnippet} language={currentPost.codeLanguage} />
+			)}
+
 			{currentPost.img && (
-				<Box borderRadius={6} overflow={"hidden"} border={"1px solid"} borderColor={"gray.light"}>
-					<Image src={currentPost.img} w={"full"} />
+				<Box borderRadius={6} overflow="hidden" border="1px solid" borderColor="#30363d">
+					<Image src={currentPost.img} w="full" />
 				</Box>
 			)}
 
