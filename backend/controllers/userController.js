@@ -69,13 +69,35 @@ const signupUser = async (req, res) => {
 	}
 };
 
+const getCurrentUser = async (req, res) => {
+	try {
+		const user = await User.findById(req.user._id).select("-password");
+		if (!user) return res.status(404).json({ error: "User not found" });
+		res.status(200).json(user);
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
+};
+
+const oauthCallback = (req, res) => {
+	generateTokenAndSetCookie(req.user._id, res);
+	const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
+	res.redirect(`${clientUrl}/?oauth=1`);
+};
+
 const loginUser = async (req, res) => {
 	try {
 		const { username, password } = req.body;
 		const user = await User.findOne({ username });
-		const isPasswordCorrect = await bcrypt.compare(password, user?.password || "");
 
-		if (!user || !isPasswordCorrect) return res.status(400).json({ error: "Invalid username or password" });
+		if (!user) return res.status(400).json({ error: "Invalid username or password" });
+
+		if (!user.password) {
+			return res.status(400).json({ error: "This account uses OAuth login. Please sign in with Google or GitHub." });
+		}
+
+		const isPasswordCorrect = await bcrypt.compare(password, user.password);
+		if (!isPasswordCorrect) return res.status(400).json({ error: "Invalid username or password" });
 
 		if (user.isFrozen) {
 			user.isFrozen = false;
@@ -248,4 +270,6 @@ export {
 	getUserProfile,
 	getSuggestedUsers,
 	freezeAccount,
+	getCurrentUser,
+	oauthCallback,
 };

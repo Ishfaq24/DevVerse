@@ -17,25 +17,65 @@ import { SocketContextProvider } from "./context/SocketContext.jsx";
 const styles = {
 	global: (props) => ({
 		body: {
-			color: mode("gray.800", "whiteAlpha.900")(props),
-			bg: mode("gray.100", "#101010")(props),
+			color: mode("gray.800", "#e6edf3")(props),
+			bg: mode("#f6f8fa", "#0d1117")(props),
+			fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
 		},
 	}),
 };
 
 const config = {
 	initialColorMode: "dark",
-	useSystemColorMode: true,
+	useSystemColorMode: false,
 };
 
 const colors = {
 	gray: {
-		light: "#616161",
-		dark: "#1e1e1e",
+		light: "#8b949e",
+		dark: "#161b22",
+	},
+	brand: {
+		50: "#ecfdf5",
+		100: "#d1fae5",
+		200: "#a7f3d0",
+		300: "#6ee7b7",
+		400: "#34d399",
+		500: "#10B981",
+		600: "#059669",
+		700: "#047857",
+		800: "#065f46",
+		900: "#064e3b",
 	},
 };
 
-const theme = extendTheme({ config, styles, colors });
+const components = {
+	Button: {
+		variants: {
+			solid: (props) => ({
+				...(props.colorScheme === "green" && {
+					bg: mode("brand.500", "brand.500")(props),
+					color: "white",
+					_hover: { bg: mode("brand.600", "brand.400")(props) },
+				}),
+			}),
+		},
+	},
+	Modal: {
+		baseStyle: (props) => ({
+			dialog: {
+				bg: mode("white", "#161b22")(props),
+				borderColor: mode("gray.200", "#30363d")(props),
+				border: "1px solid",
+			},
+		}),
+	},
+};
+
+const fonts = {
+	mono: "'Fira Code', 'JetBrains Mono', 'Cascadia Code', monospace",
+};
+
+const theme = extendTheme({ config, styles, colors, components, fonts });
 
 ReactDOM.createRoot(document.getElementById("root")).render(
 	<React.StrictMode>

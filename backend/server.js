@@ -3,6 +3,8 @@ import express from "express";
 import dotenv from "dotenv";
 import connectDB from "./db/connectDB.js";
 import cookieParser from "cookie-parser";
+import session from "express-session";
+import passport from "./config/passport.js";
 import userRoutes from "./routes/userRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
@@ -25,9 +27,18 @@ cloudinary.config({
 });
 
 // Middlewares
-app.use(express.json({ limit: "50mb" })); // To parse JSON data in the req.body
-app.use(express.urlencoded({ extended: true })); // To parse form data in the req.body
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(
+	session({
+		secret: process.env.SESSION_SECRET || process.env.JWT_SECRET,
+		resave: false,
+		saveUninitialized: false,
+	})
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Routes
 app.use("/api/users", userRoutes);
