@@ -23,7 +23,7 @@ const LogoutButton = () => {
 				return;
 			}
 
-			localStorage.removeItem("user-threads");
+			localStorage.removeItem("user-devverse");
 			setUser(null);
 		} catch (error) {
 			showToast("Error", error, "error");

@@ -14,6 +14,7 @@ import { DeleteIcon } from "@chakra-ui/icons";
 
 import Actions from "./Actions";
 import CodeBlock from "./CodeBlock";
+import EditPost from "./EditPost";
 import useShowToast from "../hooks/useShowToast";
 import userAtom from "../atoms/userAtom";
 import postsAtom from "../atoms/postsAtom";
@@ -62,6 +63,10 @@ const Post = ({ post, postedBy }) => {
     } catch (error) {
       showToast("Error", error.message, "error");
     }
+  };
+
+  const handlePostUpdated = (updatedPost) => {
+    setPosts(posts.map((p) => (p._id === updatedPost._id ? updatedPost : p)));
   };
 
   if (!user) return null;
@@ -141,11 +146,16 @@ const Post = ({ post, postedBy }) => {
               </Text>
               <Image src="/verified.png" w={4} h={4} ml={1} />
             </Flex>
-            <Flex gap={4} alignItems="center">
+            <Flex gap={2} alignItems="center">
               <Text fontSize="xs" width={36} textAlign="right" color="gray.light">
                 {formatDistanceToNow(new Date(post.createdAt))} ago
               </Text>
-              {currentUser?._id === user._id && <DeleteIcon size={20} onClick={handleDeletePost} />}
+              {currentUser?._id === user._id && (
+                <>
+                  <EditPost post={post} onPostUpdated={handlePostUpdated} />
+                  <DeleteIcon size={20} onClick={handleDeletePost} cursor="pointer" />
+                </>
+              )}
             </Flex>
           </Flex>
 

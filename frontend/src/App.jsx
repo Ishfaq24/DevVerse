@@ -26,7 +26,7 @@ function App() {
 					const res = await fetch("/api/users/me", { credentials: "include" });
 					const data = await res.json();
 					if (!data.error) {
-						localStorage.setItem("user-threads", JSON.stringify(data));
+						localStorage.setItem("user-devverse", JSON.stringify(data));
 						setUser(data);
 					}
 				} catch (err) {
