@@ -1,12 +1,14 @@
-import { Avatar, Divider, Flex, Image, Skeleton, SkeletonCircle, Text, useColorModeValue } from "@chakra-ui/react";
+import { Avatar, Divider, Flex, IconButton, Image, Skeleton, SkeletonCircle, Text, useColorModeValue, useDisclosure } from "@chakra-ui/react";
 import Message from "./Message";
 import MessageInput from "./MessageInput";
+import CallModal from "./CallModal";
 import { useEffect, useRef, useState } from "react";
 import useShowToast from "../hooks/useShowToast";
 import { conversationsAtom, selectedConversationAtom } from "../atoms/messagesAtom";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import userAtom from "../atoms/userAtom";
 import { useSocket } from "../context/SocketContext.jsx";
+import { FaPhone, FaVideo } from "react-icons/fa";
 import messageSound from "../assets/sounds/newMessage.mp3";
 const MessageContainer = () => {
 	const showToast = useShowToast();
@@ -17,6 +19,65 @@ const MessageContainer = () => {
 	const { socket } = useSocket();
 	const setConversations = useSetRecoilState(conversationsAtom);
 	const messageEndRef = useRef(null);
+	
+	const { isOpen: isCallOpen, onOpen: onCallOpen, onClose: onCallClose } = useDisclosure();
+	const [isCallActive, setIsCallActive] = useState(false);
+	const [callData, setCallData] = useState(null);
+	const [isVideoCall, setIsVideoCall] = useState(false);
+
+	useEffect(() => {
+		socket?.on("callUser", ({ signal, from, name, profilePic, isVideo }) => {
+			setCallData({ signal, from, name, profilePic, isVideo, isInitiator: false });
+			onCallOpen();
+		});
+
+		socket?.on("callAccepted", (signal) => {
+			// Call was accepted, update callData to reflect this
+			setCallData(prev => prev ? { ...prev, signal, isAccepted: true } : null);
+		});
+
+		socket?.on("callEnded", () => {
+			setIsCallActive(false);
+			setCallData(null);
+			onCallClose();
+		});
+
+		return () => {
+			socket?.off("callUser");
+			socket?.off("callAccepted");
+			socket?.off("callEnded");
+		};
+	}, [socket, onCallOpen, onCallClose]);
+
+
+	const handleVoiceCall = () => {
+		const callInfo = {
+			from: currentUser._id,
+			name: currentUser.name,
+			profilePic: currentUser.profilePic,
+			isVideo: false,
+			isInitiator: true,
+			userToCall: selectedConversation.userId
+		};
+		setCallData(callInfo);
+		setIsVideoCall(false);
+		onCallOpen();
+	};
+
+
+	const handleVideoCall = () => {
+		const callInfo = {
+			from: currentUser._id,
+			name: currentUser.name,
+			profilePic: currentUser.profilePic,
+			isVideo: true,
+			isInitiator: true,
+			userToCall: selectedConversation.userId
+		};
+		setCallData(callInfo);
+		setIsVideoCall(true);
+		onCallOpen();
+	};
 
 	useEffect(() => {
 		socket.on("newMessage", (message) => {
@@ -111,14 +172,35 @@ const MessageContainer = () => {
 			borderRadius={"md"}
 			p={2}
 			flexDirection={"column"}
-		>
-			{/* Message header */}
-			<Flex w={"full"} h={12} alignItems={"center"} gap={2}>
-				<Avatar src={selectedConversation.userProfilePic} size={"sm"} />
+		>		{/* Message header */}
+		<Flex w={"full"} h={12} alignItems={"center"} gap={2} justifyContent="space-between">
+			<Flex alignItems={"center"} gap={2}>
+				<Avatar src={selectedConversation.userProfilePic} size={"sm"} /> 
 				<Text display={"flex"} alignItems={"center"}>
 					{selectedConversation.username} <Image src='/verified.png' w={4} h={4} ml={1} />
 				</Text>
 			</Flex>
+			<Flex gap={2}>
+				<IconButton
+					icon={<FaPhone />}
+					size="sm"
+					variant="ghost"
+					color="gray.light"
+					_hover={{ color: "#10B981", bg: "#161b22" }}
+					onClick={handleVoiceCall}
+					aria-label="Voice call"
+				/>
+				<IconButton
+					icon={<FaVideo />}
+					size="sm"
+					variant="ghost"
+					color="gray.light"
+					_hover={{ color: "#10B981", bg: "#161b22" }}
+					onClick={handleVideoCall}
+					aria-label="Video call"
+				/>
+			</Flex>
+		</Flex>
 
 			<Divider />
 
@@ -155,9 +237,17 @@ const MessageContainer = () => {
 					))}
 			</Flex>
 
-			<MessageInput setMessages={setMessages} />
-		</Flex>
-	);
+		<MessageInput setMessages={setMessages} />
+
+		<CallModal 
+			isOpen={isCallOpen} 
+			onClose={onCallClose} 
+			callData={callData}
+			isCallActive={isCallActive}
+			setIsCallActive={setIsCallActive}
+		/>
+	</Flex>
+);
 };
 
 export default MessageContainer;
