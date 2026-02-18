@@ -29,15 +29,19 @@ const CodeBlock = ({ code, language }) => {
 			border="1px solid"
 			borderColor="#30363d"
 			onClick={(e) => e.preventDefault()}
+			maxW="100%"
+			overflowX="auto"
 		>
 			<Flex
 				justify="space-between"
 				align="center"
 				bg="#161b22"
-				px={4}
+				px={{ base: 2, md: 4 }}
 				py={2}
 				borderBottom="1px solid"
 				borderColor="#30363d"
+				flexWrap="wrap"
+				gap={2}
 			>
 				<Text fontSize="xs" color="#8b949e" fontFamily="mono" fontWeight="600" textTransform="uppercase">
 					{language || "code"}
@@ -54,7 +58,16 @@ const CodeBlock = ({ code, language }) => {
 					{copied ? "Copied!" : "Copy"}
 				</Button>
 			</Flex>
-			<Box maxH="400px" overflowY="auto">
+			<Box 
+				maxH="400px" 
+				overflowY="auto"
+				overflowX="auto"
+				css={{
+					'&::-webkit-scrollbar': { height: '6px', width: '6px' },
+					'&::-webkit-scrollbar-track': { background: '#0d1117' },
+					'&::-webkit-scrollbar-thumb': { background: '#30363d', borderRadius: '3px' },
+				}}
+			>
 				<SyntaxHighlighter
 					language={language || "text"}
 					style={vscDarkPlus}
@@ -64,9 +77,10 @@ const CodeBlock = ({ code, language }) => {
 						fontSize: "13px",
 						background: "#0d1117",
 						padding: "16px",
+						minWidth: 'fit-content',
 					}}
 					showLineNumbers
-					lineNumberStyle={{ color: "#484f58", fontSize: "12px" }}
+					lineNumberStyle={{ color: "#484f58", fontSize: "12px", minWidth: '2.5em' }}
 				>
 					{code}
 				</SyntaxHighlighter>

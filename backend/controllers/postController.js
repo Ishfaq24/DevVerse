@@ -78,6 +78,36 @@ const deletePost = async (req, res) => {
 	}
 };
 
+const updatePost = async (req, res) => {
+	try {
+		const { text, codeSnippet, codeLanguage } = req.body;
+		const postId = req.params.id;
+
+		const post = await Post.findById(postId);
+		if (!post) {
+			return res.status(404).json({ error: "Post not found" });
+		}
+
+		if (post.postedBy.toString() !== req.user._id.toString()) {
+			return res.status(401).json({ error: "Unauthorized to edit post" });
+		}
+
+		if (text && text.length > 500) {
+			return res.status(400).json({ error: "Text must be less than 500 characters" });
+		}
+
+		if (text) post.text = text;
+		if (codeSnippet !== undefined) post.codeSnippet = codeSnippet;
+		if (codeLanguage !== undefined) post.codeLanguage = codeLanguage;
+
+		await post.save();
+
+		res.status(200).json(post);
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+	}
+};
+
 const likeUnlikePost = async (req, res) => {
 	try {
 		const { id: postId } = req.params;
@@ -168,4 +198,4 @@ const getUserPosts = async (req, res) => {
 	}
 };
 
-export { createPost, getPost, deletePost, likeUnlikePost, replyToPost, getFeedPosts, getUserPosts };
+export { createPost, getPost, deletePost, updatePost, likeUnlikePost, replyToPost, getFeedPosts, getUserPosts };

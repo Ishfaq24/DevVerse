@@ -53,7 +53,7 @@ export default function SignupCard() {
 				return;
 			}
 
-			localStorage.setItem("user-threads", JSON.stringify(data));
+			localStorage.setItem("user-devverse", JSON.stringify(data));
 			setUser(data);
 		} catch (error) {
 			showToast("Error", error, "error");
