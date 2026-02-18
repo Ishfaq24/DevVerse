@@ -8,8 +8,9 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
 	cors: {
-		origin: "http://localhost:3000",
+		origin: ["http://localhost:5173", "http://localhost:3000"],
 		methods: ["GET", "POST"],
+		credentials: true,
 	},
 });
 
@@ -33,6 +34,25 @@ io.on("connection", (socket) => {
 			io.to(userSocketMap[userId]).emit("messagesSeen", { conversationId });
 		} catch (error) {
 			console.log(error);
+		}
+	});
+
+	// Call signaling events
+	socket.on("callUser", ({ userToCall, signalData, from, name, profilePic, isVideo }) => {
+		if (userSocketMap[userToCall]) {
+			io.to(userSocketMap[userToCall]).emit("callUser", { signal: signalData, from, name, profilePic, isVideo });
+		}
+	});
+
+	socket.on("answerCall", ({ to, signal }) => {
+		if (userSocketMap[to]) {
+			io.to(userSocketMap[to]).emit("callAccepted", signal);
+		}
+	});
+
+	socket.on("endCall", ({ to }) => {
+		if (userSocketMap[to]) {
+			io.to(userSocketMap[to]).emit("callEnded");
 		}
 	});
 

@@ -89,6 +89,7 @@ DevVerse is a full-stack social media platform for developers built with the MER
 | **JWT** | Token-based authentication |
 | **Bcryptjs** | Password hashing |
 | **Cron** | Scheduled jobs |
+| **Simple-Peer** | WebRTC peer connection (signaling) |
 
 ### Frontend
 | Technology | Purpose |
@@ -102,6 +103,7 @@ DevVerse is a full-stack social media platform for developers built with the MER
 | **React Syntax Highlighter** | Code snippet highlighting |
 | **date-fns** | Date formatting |
 | **Socket.io Client** | Real-time messaging client |
+| **Simple-Peer** | WebRTC voice/video calls |
 
 ---
 
@@ -148,6 +150,7 @@ devverse/
 │   │   │   └── userAtom.js
 │   │   ├── components/       # Reusable components
 │   │   │   ├── Actions.jsx       # Like, reply, repost actions
+│   │   │   ├── CallModal.jsx     # Voice/video call modal
 │   │   │   ├── CodeBlock.jsx     # Syntax highlighted code
 │   │   │   ├── Comment.jsx
 │   │   │   ├── Conversation.jsx
@@ -335,6 +338,53 @@ devverse/
 | `typing` | Both | User typing indicator |
 | `stop typing` | Both | Stop typing indicator |
 
+### Voice & Video Calls (WebRTC)
+DevVerse supports peer-to-peer voice and video calls using **Simple-Peer** (WebRTC wrapper).
+
+#### Technology
+- **Simple-Peer**: WebRTC wrapper for peer-to-peer connections
+- **Socket.io**: Signaling server for call setup
+- **getUserMedia API**: Browser API for camera/mic access
+
+#### Polyfills Required
+Due to Simple-Peer being a Node.js package, the following polyfills are used in Vite:
+- `buffer`: For Buffer global
+- `stream-browserify`: For stream polyfills
+
+See `frontend/src/utils/polyfills.js` for implementation.
+
+| Event | Direction | Description |
+|-------|-----------|-------------|
+| `callUser` | Client→Server | Initiate a call to user |
+| `callUser` | Server→Client | Receive incoming call |
+| `answerCall` | Client→Server | Accept call |
+| `callAccepted` | Server→Client | Call accepted (contains WebRTC signal) |
+| `endCall` | Client→Server | End call |
+| `callEnded` | Server→Client | Call ended by other party |
+
+#### Call Flow
+1. Caller clicks voice/video button in chat header
+2. Caller's browser requests camera/mic access
+3. Simple-Peer creates WebRTC peer connection (initiator)
+4. Signal data sent to callee via Socket.io `callUser` event
+5. Callee receives call notification modal, accepts/declines
+6. If accepted, callee's browser requests media access
+7. WebRTC peer connection established (peer-to-peer)
+8. Audio/video streams connected to video elements
+9. Either party can end call at any time
+
+#### Frontend Call Components
+- **CallModal.jsx**: Full-featured call modal component
+  - Handles incoming call notifications with accept/decline
+  - Displays local and remote video streams
+  - Controls: mute/unmute microphone, toggle camera, end call
+  - Uses Simple-Peer for WebRTC peer connection
+  - Automatic stream cleanup on call end
+- **MessageContainer.jsx**: Call buttons in chat header
+  - Voice call button (phone icon)
+  - Video call button (video icon)
+  - Buttons visible when chat is active
+
 ---
 
 ## State Management (Recoil)
@@ -373,9 +423,11 @@ NODE_ENV=development
 2. **Code Highlighting**: Syntax highlighting for 25+ languages
 3. **Social Interactions**: Follow/unfollow, likes, replies
 4. **Real-time Messaging**: Socket.io powered chat
-5. **User Profiles**: Customizable profile with bio, avatar, cover
-6. **OAuth Integration**: Google and GitHub login
-7. **Responsive Design**: Mobile-friendly with Chakra UI
+5. **Voice & Video Calls**: WebRTC peer-to-peer calls
+6. **User Profiles**: Customizable profile with bio, avatar, cover
+7. **OAuth Integration**: Google and GitHub login
+8. **Responsive Design**: Mobile-friendly with Chakra UI
+9. **Edit Posts**: Users can edit their own posts
 
 ---
 
