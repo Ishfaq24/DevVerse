@@ -1,9 +1,11 @@
 import User from "../models/userModel.js";
 import Post from "../models/postModel.js";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import generateTokenAndSetCookie from "../utils/helpers/generateTokenAndSetCookie.js";
 import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
+import { sendVerificationEmail } from "../utils/email.js";
 
 const getUserProfile = async (req, res) => {
 	// We will fetch user profile either with username or userId
@@ -41,16 +43,25 @@ const signupUser = async (req, res) => {
 		const salt = await bcrypt.genSalt(10);
 		const hashedPassword = await bcrypt.hash(password, salt);
 
+		const verificationToken = crypto.randomBytes(32).toString("hex");
+
 		const newUser = new User({
 			name,
 			email,
 			username,
 			password: hashedPassword,
+			verificationToken,
+			isVerified: false,
 		});
 		await newUser.save();
 
 		if (newUser) {
-			generateTokenAndSetCookie(newUser._id, res);
+			// Send verification email
+			try {
+				await sendVerificationEmail(newUser.email, verificationToken);
+			} catch (emailError) {
+				console.log("Error sending verification email:", emailError.message);
+			}
 
 			res.status(201).json({
 				_id: newUser._id,
@@ -59,6 +70,8 @@ const signupUser = async (req, res) => {
 				username: newUser.username,
 				bio: newUser.bio,
 				profilePic: newUser.profilePic,
+				isVerified: newUser.isVerified,
+				message: "Signup successful. Please check your email to verify your account.",
 			});
 		} else {
 			res.status(400).json({ error: "Invalid user data" });
@@ -79,7 +92,13 @@ const getCurrentUser = async (req, res) => {
 	}
 };
 
-const oauthCallback = (req, res) => {
+const oauthCallback = async (req, res) => {
+	// Auto-verify OAuth users since their email is already verified by the provider
+	if (!req.user.isVerified) {
+		req.user.isVerified = true;
+		await req.user.save();
+	}
+	
 	generateTokenAndSetCookie(req.user._id, res);
 	const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
 	res.redirect(`${clientUrl}/?oauth=1`);
@@ -99,6 +118,11 @@ const loginUser = async (req, res) => {
 		const isPasswordCorrect = await bcrypt.compare(password, user.password);
 		if (!isPasswordCorrect) return res.status(400).json({ error: "Invalid username or password" });
 
+		// Check if user is verified
+		if (!user.isVerified) {
+			return res.status(400).json({ error: "Please verify your email before logging in. Check your email for the verification link." });
+		}
+
 		if (user.isFrozen) {
 			user.isFrozen = false;
 			await user.save();
@@ -113,6 +137,7 @@ const loginUser = async (req, res) => {
 			username: user.username,
 			bio: user.bio,
 			profilePic: user.profilePic,
+			isVerified: user.isVerified,
 		});
 	} catch (error) {
 		res.status(500).json({ error: error.message });
@@ -261,6 +286,26 @@ const freezeAccount = async (req, res) => {
 	}
 };
 
+const verifyUser = async (req, res) => {
+	try {
+		const { token } = req.params;
+		const user = await User.findOne({ verificationToken: token });
+
+		if (!user) {
+			return res.status(400).json({ error: "Invalid or expired verification token" });
+		}
+
+		user.isVerified = true;
+		user.verificationToken = "";
+		await user.save();
+
+		res.status(200).json({ message: "Email verified successfully. You can now log in." });
+	} catch (err) {
+		res.status(500).json({ error: err.message });
+		console.log("Error in verifyUser: ", err.message);
+	}
+};
+
 export {
 	signupUser,
 	loginUser,
@@ -272,4 +317,5 @@ export {
 	freezeAccount,
 	getCurrentUser,
 	oauthCallback,
+	verifyUser,
 };
